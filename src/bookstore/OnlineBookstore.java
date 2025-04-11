@@ -1,3 +1,4 @@
+
 package bookstore;
 
 import java.util.Scanner;
@@ -13,20 +14,20 @@ public class OnlineBookstore {
         Scanner scanner = new Scanner(System.in);
 
         CustomArrayList<Book> bookInventory = StorageBook.generateBooks();
-        CustomQueue<Order> orderQueue = new CustomQueue<>(10);
+        CustomQueue<Order> orderQueue = new CustomQueue<>();
         CustomStack<Book> browsingHistory = new CustomStack<>(Book.class, 10);
         CustomArrayList<Order> orderHistory = new CustomArrayList<>(10);
 
         while (true) {
-            System.out.println("\n1. View Books\n2. Browse Book\n3. Place Order\n4. Process Order\n5. Search Order\n6. Exit");
+            System.out.println("\n1. View Books\n2. Browse Book\n3. Add Book\n4. Place Order\n5. Process Order\n6. History Order\n7. Search Order\n8. Exit");
             System.out.print("Enter choice: ");
 
             int choice = -1;
             try {
-                choice = Integer.parseInt(scanner.nextLine());  // Read input as string and try to convert to int
+                choice = Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a number from the menu.");
-                continue;  // Skip to the next iteration if input is invalid
+                continue;
             }
 
             switch (choice) {
@@ -38,6 +39,7 @@ public class OnlineBookstore {
                     System.out.println("\nSearch Book by:");
                     System.out.println("1. Book ID");
                     System.out.println("2. Book Title");
+                    System.out.println("Current Available Books: " + bookInventory.size());
                     System.out.print("Enter your choice: ");
                     int searchChoice = scanner.nextInt();
                     scanner.nextLine();
@@ -45,12 +47,10 @@ public class OnlineBookstore {
                     if (searchChoice == 1) {
                         System.out.print("\nEnter Book ID: ");
                         int bookId = -1;
-
-                        // Validate input for Book ID
                         while (true) {
                             try {
                                 bookId = Integer.parseInt(scanner.nextLine());
-                                break; // Break out of the loop if the input is valid
+                                break;
                             } catch (NumberFormatException e) {
                                 System.out.print("Invalid input. Please enter a valid Book ID: ");
                             }
@@ -70,7 +70,7 @@ public class OnlineBookstore {
                             System.out.println("No book found with ID " + bookId);
                         }
                     } else if (searchChoice == 2) {
-                        System.out.print("\nEnter Book Title (partial or full): ");
+                        System.out.print("\nEnter Book Title: ");
                         String titleQuery = scanner.nextLine().toLowerCase();
 
                         boolean found = false;
@@ -90,34 +90,129 @@ public class OnlineBookstore {
                     }
                     break;
 
-                case 3: // Allow multiple book selections with quantity
-                    String name;
-                    String address;
-                    // Ensure valid customer name (no numbers)
+                case 3:
+                    // Get Book Title (no numbers allowed)
+                    String title;
                     while (true) {
-                        System.out.print("\nEnter Customer Name: ");
-                        name = scanner.nextLine();
-                        if (name.matches("[a-zA-Z ]+")) {  // Check for letters and spaces only
+                        System.out.print("Enter Book Title: ");
+                        title = scanner.nextLine();
+                        if (title.matches("[a-zA-Z0-9\\s]+")) {
                             break;
                         } else {
-                            System.out.println("Invalid name. Customer name should contain only letters and spaces.");
+                            System.out.println("Invalid title. Only letters, numbers and spaces allowed.");
                         }
                     }
 
-                    // Ensure valid address (must have number and road name)
+                    // Get Author Name
+                    String author;
                     while (true) {
-                        System.out.print("Enter Address: ");
-                        address = scanner.nextLine();
-                        if (address.matches(".*\\d.*") && address.matches(".*[a-zA-Z]+.*")) {  // Check for number and letters
+                        System.out.print("Enter Author: ");
+                        author = scanner.nextLine();
+                        if (author.matches("[a-zA-Z\\s]+")) {
                             break;
                         } else {
-                            System.out.println("Invalid address. Address should contain a number and a road name.");
+                            System.out.println("Invalid author name. Author name must not contain numbers.");
                         }
                     }
 
-                    Order newOrder = new Order(name, address);
+                    // Get Price
+                    double price = -1;
+                    while (price < 0) {
+                        System.out.print("Enter Price: ");
+                        try {
+                            price = Double.parseDouble(scanner.nextLine());
+                            if (price < 0) System.out.println("Price must be positive.");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input. Please enter a valid number.");
+                        }
+                    }
 
-                    // Show available books with stock
+                    // Get Stock
+                    int stock = -1;
+                    while (stock < 0) {
+                        System.out.print("Enter Stock Quantity: ");
+                        try {
+                            stock = Integer.parseInt(scanner.nextLine());
+                            if (stock < 0) System.out.println("Stock must be a non-negative integer.");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input. Please enter an integer.");
+                        }
+                    }
+
+                    // Add and Save new book into file
+                    Book newBook = new Book(title, author, price, stock);
+                    bookInventory.add(newBook);
+                    System.out.println("✅ Book added to inventory successfully!");
+                    break;
+
+                case 4:
+                    // Check if this is the first order
+                    boolean isFirstOrder = orderQueue.isEmpty();
+
+                    Order orderToUse = null;
+
+                    if (!isFirstOrder) {
+                        // Ask for Order ID only on second or later usage
+                        System.out.print("Enter Order ID: ");
+                        int enteredOrderId = -1;
+                        try {
+                            enteredOrderId = Integer.parseInt(scanner.nextLine());
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input. Returning to main menu.");
+                            break;
+                        }
+
+                        boolean found = false;
+                        for (int i = 0; i < orderQueue.size(); i++) {
+                            Order o = orderQueue.get(i);
+                            if (o.getOrderId() == enteredOrderId) {
+                                found = true;
+                                System.out.print("Do you want to continue this order? (yes/no): ");
+                                String confirm = scanner.nextLine().trim().toLowerCase();
+                                if (confirm.equals("yes") || confirm.equals("y")) {
+                                    orderToUse = o;
+                                    System.out.println("Continuing order for:");
+                                    System.out.println("Customer: " + o.getCustomerName());
+                                    System.out.println("Address: " + o.getAddress());
+                                    System.out.println("Order ID: " + o.getOrderId());
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!found || orderToUse == null) {
+                            System.out.println("No matching unprocessed order found or user declined to continue. Creating new order...");
+                        }
+                    }
+
+                    // If not continuing an old order, create a new one
+                    if (orderToUse == null) {
+                        String name;
+                        String address;
+
+                        while (true) {
+                            System.out.print("\nEnter Customer Name: ");
+                            name = scanner.nextLine();
+                            if (name.matches("[a-zA-Z ]+")) {
+                                break;
+                            } else {
+                                System.out.println("Invalid name. Customer name should contain only letters and spaces.");
+                            }
+                        }
+
+                        while (true) {
+                            System.out.print("Enter Address: ");
+                            address = scanner.nextLine();
+                            if (address.matches(".*\\d.*") && address.matches(".*[a-zA-Z]+.*")) {
+                                break;
+                            } else {
+                                System.out.println("Invalid address. Address should contain a number and a road name.");
+                            }
+                        }
+
+                        orderToUse = new Order(name, address);
+                    }
+
                     System.out.println("\nAvailable Books:");
                     bookInventory.displayBooks();
 
@@ -127,7 +222,7 @@ public class OnlineBookstore {
                         System.out.print("Enter book and quantity: ");
                         String input = scanner.nextLine().trim();
 
-                        if (input.equals("0")) break; // Stop ordering
+                        if (input.equals("0")) break;
 
                         String[] parts = input.split(" ");
                         if (parts.length != 2) {
@@ -136,7 +231,7 @@ public class OnlineBookstore {
                         }
 
                         try {
-                            int bookIndex = Integer.parseInt(parts[0]) - 1; // Convert to 0-based index
+                            int bookIndex = Integer.parseInt(parts[0]) - 1;
                             int quantity = Integer.parseInt(parts[1]);
 
                             if (bookIndex < 0 || bookIndex >= bookInventory.size() || quantity <= 0) {
@@ -147,8 +242,8 @@ public class OnlineBookstore {
                             Book selectedBook = bookInventory.get(bookIndex);
 
                             if (selectedBook.getStock() >= quantity) {
-                                newOrder.addBook(selectedBook, quantity);
-                                selectedBook.reduceStock(quantity); // Deduct stock
+                                orderToUse.addBook(selectedBook, quantity);
+                                selectedBook.reduceStock(quantity);
                                 System.out.println("Added " + quantity + " x " + selectedBook.getTitle() + " to order.");
                             } else {
                                 System.out.println("Not enough stock available.");
@@ -158,26 +253,65 @@ public class OnlineBookstore {
                         }
                     }
 
-                    if (!newOrder.isEmpty()) {
-                        orderQueue.enqueue(newOrder);
-                        System.out.println("Order placed successfully!");
+                    if (!orderToUse.isEmpty()) {
+                        if (!orderQueue.contains(orderToUse)) {
+                            orderQueue.enqueue(orderToUse);
+                        }
+                        System.out.println("✅ Order saved successfully!");
+                        System.out.println("Customer: " + orderToUse.getCustomerName());
+                        System.out.println("Address: " + orderToUse.getAddress());
+                        System.out.println("Order ID: " + orderToUse.getOrderId());
                     } else {
-                        System.out.println("No books added. Order canceled.");
+                        System.out.println("❌ No books added. Order canceled.");
                     }
                     break;
 
-                case 4: // Process Order
-                    if (!orderQueue.isEmpty()) {
-                        Order processedOrder = orderQueue.dequeue();
-                        processedOrder.sortBooks();
-                        orderHistory.add(processedOrder); // Store in history
-                        System.out.println("Processing order:\n" + processedOrder);
+                case 5:
+                    if (orderQueue.isEmpty()) {
+                        System.out.println("No orders in the queue.");
                     } else {
-                        System.out.println("No orders to process.");
+                        System.out.println("Processing next order...");
+
+                        Order order = orderQueue.dequeue();
+
+                        if (order != null) {
+                            System.out.println(order);  // Show order info
+
+                            double total = 0;
+                            for (int j = 0; j < order.getBooks().size(); j++) {
+                                Book book = order.getBooks().get(j);
+                                int qty = order.getQuantities().get(j);
+                                total += book.getPrice() * qty;
+                            }
+
+                            System.out.printf("Total Price: $%.2f\n", total);
+                            System.out.println("--------------------------");
+
+                            orderHistory.add(order);  // Save to history after processing
+                        }
                     }
                     break;
 
-                case 5: // Search Order
+                case 6:
+                    if (orderHistory.size() == 0) {
+                        System.out.println("No processed orders in history.");
+                    } else {
+                        System.out.println("\nOrder History:");
+                        for (int i = 0; i < orderHistory.size(); i++) {
+                            Order order = orderHistory.get(i);
+                            System.out.println(order);
+                            System.out.printf("Total Price: $%.2f\n", order.getTotalPrice());
+                            System.out.println("--------------------------");
+                        }
+                    }
+                    break;
+
+                case 7:
+                    if (orderHistory.size() == 0) {
+                        System.out.println("\nNo orders have been placed yet.");
+                        break;
+                    }
+
                     System.out.print("\nEnter Order ID to search: ");
                     int searchOrderId = -1;
                     try {
@@ -192,6 +326,7 @@ public class OnlineBookstore {
                         Order order = orderHistory.get(i);
                         if (order.getOrderId() == searchOrderId) {
                             System.out.println("\nOrder Found:\n" + order);
+                            System.out.printf("Total Price: $%.2f\n", order.getTotalPrice());
                             orderFound = true;
                             break;
                         }
@@ -202,7 +337,7 @@ public class OnlineBookstore {
                     }
                     break;
 
-                case 6:
+                case 8:
                     System.out.println("Exiting system...");
                     scanner.close();
                     return;
