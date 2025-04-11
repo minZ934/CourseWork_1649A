@@ -1,20 +1,43 @@
 package bookstore.algorithms;
 
-import bookstore.data.CustomArrayList;
 import bookstore.models.Book;
+import bookstore.data.CustomArrayList;
 
 public class SortingAlgorithms {
-    public static void insertionSort(CustomArrayList<Book> bookList) {
-        int n = bookList.size();
-        for (int i = 1; i < n; i++) {
-            Book key = bookList.get(i);
-            int j = i - 1;
 
-            while (j >= 0 && bookList.get(j).getTitle().compareTo(key.getTitle()) > 0) {
-                bookList.set(j + 1, bookList.get(j));
-                j--;
+    public static void sortByTitleAZ(CustomArrayList<Book> list) {
+        for (int i = 0; i < list.size() - 1; i++) {
+            for (int j = 0; j < list.size() - i - 1; j++) {
+                if (list.get(j).getTitle().compareToIgnoreCase(list.get(j + 1).getTitle()) > 0) {
+                    Book temp = list.get(j);
+                    list.set(j, list.get(j + 1));
+                    list.set(j + 1, temp);
+                }
             }
-            bookList.set(j + 1, key);
+        }
+    }
+
+    public static void sortByPriceLowToHigh(CustomArrayList<Book> list) {
+        for (int i = 0; i < list.size() - 1; i++) {
+            for (int j = 0; j < list.size() - i - 1; j++) {
+                if (list.get(j).getPrice() > list.get(j + 1).getPrice()) {
+                    Book temp = list.get(j);
+                    list.set(j, list.get(j + 1));
+                    list.set(j + 1, temp);
+                }
+            }
+        }
+    }
+
+    public static void sortByPriceHighToLow(CustomArrayList<Book> list) {
+        for (int i = 0; i < list.size() - 1; i++) {
+            for (int j = 0; j < list.size() - i - 1; j++) {
+                if (list.get(j).getPrice() < list.get(j + 1).getPrice()) {
+                    Book temp = list.get(j);
+                    list.set(j, list.get(j + 1));
+                    list.set(j + 1, temp);
+                }
+            }
         }
     }
 }
