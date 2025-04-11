@@ -22,6 +22,14 @@ public class Order {
         return orderId;
     }
 
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
     public void addBook(Book book, int quantity) {
         books.add(book);
         quantities.add(quantity);
@@ -61,5 +69,20 @@ public class Order {
         }
 
         return orderDetails.toString();
+    }
+
+    public CustomArrayList<Book> getBooks() {
+        return books;
+    }
+
+    public CustomArrayList<Integer> getQuantities() {
+        return quantities;
+    }
+    public double getTotalPrice() {
+        double total = 0;
+        for (int i = 0; i < books.size(); i++) {
+            total += books.get(i).getPrice() * quantities.get(i);
+        }
+        return total;
     }
 }
