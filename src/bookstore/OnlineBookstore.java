@@ -1,4 +1,3 @@
-
 package bookstore;
 
 import java.util.Scanner;
@@ -8,6 +7,7 @@ import bookstore.data.CustomArrayList;
 import bookstore.data.CustomQueue;
 import bookstore.data.CustomStack;
 import bookstore.data.StorageBook;
+import bookstore.algorithms.SortingAlgorithms;
 
 public class OnlineBookstore {
     public static void main(String[] args) {
@@ -19,7 +19,7 @@ public class OnlineBookstore {
         CustomArrayList<Order> orderHistory = new CustomArrayList<>(10);
 
         while (true) {
-            System.out.println("\n1. View Books\n2. Browse Book\n3. Add Book\n4. Place Order\n5. Process Order\n6. History Order\n7. Search Order\n8. Exit");
+            System.out.println("\n1. View Books\n2. Browse Book\n3. Add Book\n4. Place Order\n5. Process Order\n6. History Order\n7. Search Order\n8. Sort Book\n9. Exit");
             System.out.print("Enter choice: ");
 
             int choice = -1;
@@ -91,7 +91,7 @@ public class OnlineBookstore {
                     break;
 
                 case 3:
-                    // Get Book Title (no numbers allowed)
+                    // Get Book Title
                     String title;
                     while (true) {
                         System.out.print("Enter Book Title: ");
@@ -142,7 +142,7 @@ public class OnlineBookstore {
                     // Add and Save new book into file
                     Book newBook = new Book(title, author, price, stock);
                     bookInventory.add(newBook);
-                    System.out.println("✅ Book added to inventory successfully!");
+                    System.out.println("Book added to inventory successfully!");
                     break;
 
                 case 4:
@@ -257,12 +257,12 @@ public class OnlineBookstore {
                         if (!orderQueue.contains(orderToUse)) {
                             orderQueue.enqueue(orderToUse);
                         }
-                        System.out.println("✅ Order saved successfully!");
+                        System.out.println("Order saved successfully!");
                         System.out.println("Customer: " + orderToUse.getCustomerName());
                         System.out.println("Address: " + orderToUse.getAddress());
                         System.out.println("Order ID: " + orderToUse.getOrderId());
                     } else {
-                        System.out.println("❌ No books added. Order canceled.");
+                        System.out.println("No books added. Order canceled.");
                     }
                     break;
 
@@ -338,6 +338,42 @@ public class OnlineBookstore {
                     break;
 
                 case 8:
+                    System.out.println("\nSort Books:");
+                    System.out.println("1. By Title (A-Z)");
+                    System.out.println("2. By Price (Low to High)");
+                    System.out.println("3. By Price (High to Low)");
+                    System.out.print("Enter your choice: ");
+
+                    int sortChoice = -1;
+                    try {
+                        sortChoice = Integer.parseInt(scanner.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid input.");
+                        break;
+                    }
+
+                    switch (sortChoice) {
+                        case 1:
+                            SortingAlgorithms.sortByTitleAZ(bookInventory);
+                            System.out.println("Books sorted by Title (A-Z):");
+                            bookInventory.displayBooks();
+                            break;
+                        case 2:
+                            SortingAlgorithms.sortByPriceLowToHigh(bookInventory);
+                            System.out.println("Books sorted by Price (Low → High):");
+                            bookInventory.displayBooks();
+                            break;
+                        case 3:
+                            SortingAlgorithms.sortByPriceHighToLow(bookInventory);
+                            System.out.println("Books sorted by Price (High → Low):");
+                            bookInventory.displayBooks();
+                            break;
+                        default:
+                            System.out.println("Invalid sort option.");
+                    }
+                    break;
+
+                case 9:
                     System.out.println("Exiting system...");
                     scanner.close();
                     return;
